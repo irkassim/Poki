@@ -11,20 +11,7 @@ const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
 });
 
-// Multer setup for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads')); // Save files in /uploads directory
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); // Unique file name
-  },
-});
-
-const upload = multer({ storage });
-
-
+//upload memory 
 exports.uploadMemory = async (req, res) => {
 
   if (!req.user || !req.user.id) {
@@ -99,7 +86,7 @@ exports.getSharedMemories = async (req, res) => {
 };
 
 // Multer middleware export
-exports.uploadMiddleware = upload.single('memoryFile');
+//exports.uploadMiddleware = upload.single('memoryFile');
 
 
 exports.shareMemory = async (req, res) => {

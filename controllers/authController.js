@@ -5,6 +5,17 @@ const User = require('../models/user');
 const mongoose = require('mongoose')
 mongoose.set('debug', true);
 
+//udpating fields 
+/* async function updateExistingUsers() {
+  await User.updateMany(
+    { zodiacSigns: { $exists: false } }, // Check if the field is missing
+    { $set: { zodiacSigns: [] } } // Set default value
+  );
+  console.log('Existing users updated successfully!');
+}
+
+updateExistingUsers(); */
+
 
 // User Registration
 exports.signup = async (req, res) => {

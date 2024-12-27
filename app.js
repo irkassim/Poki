@@ -1,3 +1,4 @@
+//Begin
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
@@ -6,6 +7,38 @@ const logger = require('./utils/logger');
 const { mongodb_connection } = require("./config/database");
 const { uploadFields } = require('./middleware/multerConfig');
 const path = require('path');
+
+// Load environment variables
+dotenv.config();
+
+// Create Express app
+const app = express();
+
+// Database connection
+mongodb_connection().then(() => {
+  console.log("App is connected to database");
+}).catch((error) => {
+  console.error("Database connection error:", error);
+});
+
+// Handle preflight requests
+//app.options('*', cors());
+
+// Middleware
+app.use(cors({
+  origin: 'http://localhost:3000', // Frontend's origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+  credentials: true, // Allow cookies if needed
+  allowedHeaders: ['Content-Type', 'Authorization'], // Include headers your app uses
+}));
+
+app.use(uploadFields); // Handle multipart/form-data
+app.use(express.json()); // Parse JSON request bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
+app.use(logger); // Log HTTP requests
+
+// Serve static files from /uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 // Import Routes
@@ -17,34 +50,6 @@ const profileRoutes = require('./routes/profileRoute')
 const pokeRoutes = require("./routes/pokeRoute")
 const messageRoutes = require("./routes/messageRoutes")
 const blockRoutes = require("./routes/messageRoutes")
-
-mongodb_connection().then(() => {
-    console.log("App is connected to database");
-  });
-
-// Load environment variables
-dotenv.config();
-
-const app = express();
-
-// Middleware
-app.use(cors()); // Allow cross-origin requests
-app.use(uploadFields); // Handle multipart/form-data
-app.use(express.json()); // Parse JSON request bodies
-
-// Middleware for parsing `multipart/form-data`
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
-
-// Allow requests from the frontend origin
-app.use(cors({
-  origin: 'http://localhost:3000', // Allow only frontend's origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
-  credentials: true, // Allow cookies if needed
-}));
-app.use(logger); // Log HTTP requests
-
-// Serve static files from /uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API Routes
 app.use('/api/auth', authRoutes);         // Authentication routes
@@ -65,7 +70,5 @@ app.get('/api/health', (req, res) => {
 app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
   });
-
-
 
 module.exports = app;

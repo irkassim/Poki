@@ -17,11 +17,9 @@ const upload = multer({
 
 // Middleware for handling files and fields
 const uploadFields = upload.fields([
-  { name: 'bio',maxCount: 1 }, // Text field
-  { name: 'gender',maxCount: 1 }, // Text field
-  { name: 'preference',maxCount: 1 }, // Text field
-  { name: 'refreshToken',maxCount: 1 }, // Text field
-  { name: 'avatar', maxCount: 1 }, // Handle avatar uploads
+  { name: 'avatar', maxCount: 1 },
+  { name: 'publicPhoto', maxCount: 9 }, // Max 9 public photos
+  { name: 'vaultImage', maxCount: 10 }, // Arbitrary high limit
 ]);
 
 module.exports = { uploadFields };
