@@ -4,13 +4,22 @@ const User = require('../models/user');
 //Update Location
 exports.updateLocation = async (req, res) => {
   
- const {  latitude, longitude } = req.body;
+ const {  location } = req.body;
       //console.log("requestbody:",req.body, "userId",req.user.id)
       //console.log('Authorization Header:', req.headers['authorization']);
+      //console.log(location)
 
-    if ( latitude == null || longitude == null) {
-        return res.status(400).json({ error: ' latitude, and longitude are required.' });
+      if (!location || !Array.isArray(location.coordinates) || location.coordinates.length !== 2) {
+        return res.status(400).json({ error: "latitude, and longitude are required." });
       }
+
+      const [longitude, latitude] = location.coordinates;
+      console.log("Points:", longitude, latitude)
+
+      if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+        return res.status(400).json({ error: "latitude and longitude must be numbers." });
+      }
+    
     try {
       const user = await User.findById(req.user.id);
             if (!user) {

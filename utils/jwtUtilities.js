@@ -4,16 +4,17 @@ const User = require('../models/user');
 // Verify JWT and Extend token
 
 exports.verifyToken = (req, res, next) => {
- console.log('Authorization Header:', req.headers['authorization']);
+// console.log('Authorization Header:', req.headers['authorization']);
+console.log('BODY:', req.body);
 
- const authHeader = req.headers['authorization'];
+ //const authHeader = req.headers['authorization'];
   const refreshToken = req.body.refreshToken;
-  console.log('Refresh Token: Vrifyroute',req.body.refreshToken, req.body);
-
   // Extract access token
-  const accessToken = authHeader && authHeader.split(' ')[1];
+  const accessToken = req.headers.authorization?.split(' ')[1];
+  //console.log('Refresh Token: Vrifyroute',req.body.refreshToken, "Access Token:", accessToken);
 
-  if (!accessToken || !refreshToken) {
+  
+  if ( !refreshToken || !accessToken) {
     return res.status(401).json({ error: 'Access and refresh tokens are required' });
   }
 

@@ -8,12 +8,11 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   bio: { type: String },
   refreshToken: { type: String },
-  Occupation: { type: String },
-  favorites: { type: String },
-  
-  gender: { type: String, enum: ['Male', 'Female', 'Non-Binary', 'Other'], default: 'Other' },
+  occupation: { type: String },
+ 
+  gender: { type: String, enum: ['Male', 'Female', 'Non-Binary', 'Other'], default: 'gender' },
   dateOfBirth: { type: Date, required: true },
-  avatar: { type: String, default: '/default-avatar.png' },
+  avatar: { type: mongoose.Schema.Types.ObjectId, ref: 'Photo' }, 
   
   favoriteMovies: {
     type: [String],
@@ -34,18 +33,27 @@ const userSchema = new mongoose.Schema({
   
   hobbies: {
     type: [String],
+
     enum: [
-      'sports', 'movies', 'music', 'art', 'literature',
-      'fashion', 'cuisine', 'travel', 'Gaming', 
-      'Gym/Fitness', 'Nerd', 'Volunteering', 'photography',
+      'Sports', 'Movies', 'Music', 'Art', 'Literature',
+      'Fashion', 'Cuisine', 'Travel', 'Gaming', 
+      'Gym/Fitness', 'Nerd', 'Volunteering', 'Photography',
+      
     ],
     default: [],
+    validate: {
+      validator: function (value) {
+        // Ensure no duplicates (case-insensitive)
+        const lowerCaseHobbies = value.map((v) => v.toLowerCase());
+        return new Set(lowerCaseHobbies).size === lowerCaseHobbies.length;
+      },
+      message: 'Duplicate hobbies are not allowed.',
+    },
   },
   favorite: {
     category: { type: String, enum: ["song", "movie", "series", "celebrity", "book", "politician", "thing"] },
     value: { type: String },
   },
-  
   
   education: {
     type: String,

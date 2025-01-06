@@ -32,7 +32,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'], // Include headers your app uses
 }));
 
-app.use(uploadFields); // Handle multipart/form-data
+//app.use(uploadFields); // Handle multipart/form-data
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 app.use(logger); // Log HTTP requests

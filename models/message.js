@@ -10,12 +10,12 @@ const messageSchema = new mongoose.Schema({
   matchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Match', required: true },
   sender: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true,
   },
   recipient: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true,
   },
   content: {
