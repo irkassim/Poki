@@ -3,6 +3,7 @@ const { body } = require('express-validator');
 const profileController = require('../controllers/profileController');
 //const { getProfile } = require('../controllers/profileController');
 const { verifyToken } = require('../utils/jwtUtilities');
+const authenticate  = require('../utils/authenticate');
 const { extendRefreshToken }  = require('../middleware/extendRefreshToken')
 //const { uploadFields } = require('../middleware/multerConfig');
 //const upload = require('../middleware/upload');
@@ -56,10 +57,15 @@ const validateProfileUpdate = [
 
    //Delete PHOTO
   router.delete('/delete-image', verifyToken, profileController.deleteImage);
+
+  router.get('/user/:id', authenticate, 
+    profileController.getUserProfile);
    
    // GET Profile 
   router.post('/user', verifyToken, 
   profileController.getProfile);
+
+ 
 
   //POST PROFILE PIC
   router.post('/set-avatar', verifyToken, profileController.setUserAvatar);

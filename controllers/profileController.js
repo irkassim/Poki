@@ -126,46 +126,54 @@ exports.getProfile = async (req, res) => {
     ); */
 
     const user = await User.findById(userId).lean(); // Fetch user profile data
-
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }
-    // Default the avatarUrl to null
-    let avatarUrl = null;
-    
-    if(user.avatar){
-      /* const avatarStream = s3
-      .getObject({
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: user.avatar, // `user.avatar` holds the S3 object key
-      })
-      .createReadStream(); */
-
-    // Option 1: Return the avatar as a separate field with a signed URL
-    try {
-      avatarUrl = await s3.getSignedUrlPromise('getObject', {
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: user.avatar,
-        Expires: 360 * 360, // URL valid for 1 hour
-      });
-    } catch (err) {
-      console.error('Error fetching avatar from S3:', err);
-      // Log the error but don't terminate the request
-    }
-
-    // Option 2: Serve the binary data (for example, in-memory buffer)
-    // const buffer = await streamToBuffer(avatarStream); // Helper function
-    // user.avatarBinary = buffer.toString('base64'); // Include binary as base64
-     }
-
-     // Attach the avatar URL to the user data
-    // console.log("Avatarurl:", avatarUrl)
-    const userProfile = { ...user, avatarUrl };
+        // Attach the avatar URL to the user data
+        // console.log("Avatarurl:", avatarUrl)
+        const userProfile = { ...user };
+        console.log("Profile:",userProfile)
   
     // Send the final response
     res.status(200).json({ user: userProfile });
   } catch (error) {
     console.error('Error fetching profile:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+//Get USER PROFILE WITH ID
+exports.getUserProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch user data by ID
+    const user = await User.findById(id)
+      .populate({
+        path: 'publicPhotos',
+        select: 'key', // Select only the key for signed URL generation
+      })
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Generate signed URLs for avatar and public photos
+   // const signedAvatarUrl = user.avatar ? await getSignedUrls([user.avatar])[0]: null;
+    const signedPublicPhotos = user.publicPhotos.length ?
+     await getSignedUrls(user.publicPhotos.map((photo) => photo.key)) : [];
+
+    // Respond with user data and signed URLs
+    res.status(200).json({
+      user: {
+        ...user,
+       // avatar: signedAvatarUrl,
+        publicPhotos: signedPublicPhotos,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching user profile:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
@@ -236,12 +244,16 @@ exports.setUserAvatar = async (req, res) => {
     // Update the avatar field
     user.avatar = selectedPhoto._id; // Save the photo ID as the avatar reference
     await user.save();
+    const signedUrl = await getSignedUrls([selectedPhoto.key]);
+
+    /* console.log("JUSTONESignedURL:", signedUrl[0])
+    console.log("SignedURL:", signedUrl) */
 
     res.status(200).json({
       message: 'Avatar updated successfully',
       avatar: {
         _id: selectedPhoto._id,
-        src: selectedPhoto.signedUrl || selectedPhoto.url, // Assuming the URL or signed URL is available
+        src:  signedUrl[0], // Assuming the URL or signed URL is available
       },
     });
   } catch (error) {

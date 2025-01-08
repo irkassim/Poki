@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
   refreshToken: { type: String },
   occupation: { type: String },
  
-  gender: { type: String, enum: ['Male', 'Female', 'Non-Binary', 'Other'], default: 'gender' },
+  gender: { type: String, enum: ['Male', 'Female', 'Non-Binary', 'Other','gender'], default: 'gender' },
   dateOfBirth: { type: Date, required: true },
   avatar: { type: mongoose.Schema.Types.ObjectId, ref: 'Photo' }, 
   

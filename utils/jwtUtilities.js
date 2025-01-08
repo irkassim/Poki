@@ -5,7 +5,7 @@ const User = require('../models/user');
 
 exports.verifyToken = (req, res, next) => {
 // console.log('Authorization Header:', req.headers['authorization']);
-console.log('BODY:', req.body);
+//console.log('BODY:', req.body);
 
  //const authHeader = req.headers['authorization'];
   const refreshToken = req.body.refreshToken;
