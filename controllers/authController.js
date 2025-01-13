@@ -107,7 +107,7 @@ exports.login = async (req, res) => {
      try {
       //await user.save();
       const savedUser = await user.save();
-        console.log('Saved user:', savedUser);
+       // console.log('Saved user:', savedUser);
     } catch (error) {
       console.error('Error saving refresh token:', error.message);
     }

@@ -1,5 +1,13 @@
 const Match = require('../models/match');
 const User = require('../models/user');
+const mongoose = require('mongoose');
+
+
+/* const querystring = require('querystring');
+const parsedQuery = querystring.parse(req.url.split('?')[1]);
+const matchId = parsedQuery.matchId;
+console.log("MATCHID", matchId); */
+
 
 exports.initiateMatch = async (req, res) => {
   try {
@@ -33,6 +41,12 @@ exports.acceptMatch = async (req, res) => {
   try {
     const matchId = req.params.matchId; // Match request ID
 
+     // Fetch user profile
+     const user = await User.findById(req.user.id).lean();
+     if (!user) {
+       return res.status(404).json({ message: 'User not found, NOT AUTHORIZED' });
+     }
+
     // Update the match status to 'accepted'
     const updatedMatch = await Match.findByIdAndUpdate(
       matchId,
@@ -51,11 +65,28 @@ exports.acceptMatch = async (req, res) => {
 };
 
 exports.rejectMatch = async (req, res) => {
+  const { matchId } = req.params; // Extract userId from the route
+ // const {userId } = req.query.use; // Extract matchId from the query string
+ // console.log("MATCHID", matchId)
   try {
-    const matchId = req.params.matchId; // Match request ID
+
+    // Fetch user profile
+    const user = await User.findById(req.user.id).lean();
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+   
+   // console.log("MATCHID", matchId)
+
+     const match = await Match.findById(new mongoose.Types.ObjectId(matchId));
+    if (!match.users.includes(req.user.id) || "") {
+      return res.status(403).json({ message: 'You are not authorized to reject this match' });
+    }
+   // console.log("MATCH FOUND:", match);
 
     // Delete the match request
     const deletedMatch = await Match.findByIdAndDelete(matchId);
+    console.log("deletedMatch:", deletedMatch);
     if (!deletedMatch) {
       return res.status(404).json({ message: 'Match request not found' });
     }

@@ -6,9 +6,12 @@ const User = require('../models/user');
 
 
 exports.sendMessage = async (req, res) => {
+  console.log("GetMessages Hit:", req.body)
   try {
     const { recipient, content } = req.body;
     const sender = req.user.id;
+
+    console.log("The Sender",sender)
 
     if (!recipient || !content) {
       return res.status(400).json({ error: 'Recipient and content are required' });
@@ -32,12 +35,13 @@ exports.sendMessage = async (req, res) => {
         { poker: recipient, pokee: sender, status: 'accepted' },
       ],
     });
+    console.log("here is the Poke:", poke)
 
     const match = await Match.findOne({
-      participants: { $all: [sender, recipient] },
+      users: { $all: [sender, recipient] },
     });
 
-
+    console.log("here is the match:", match)
 
     if (!poke && !match) {
       return res.status(403).json({ error: 'You are not eligible to message this user' });
@@ -65,6 +69,12 @@ exports.sendMessage = async (req, res) => {
       content,
     });
 
+    // Update the conversation's lastMessage field
+    await Conversation.findByIdAndUpdate(conversation._id, {
+      lastMessage: message._id,
+      updatedAt: Date.now(), // Update the `updatedAt` field as well
+    });
+
     await message.save();
 
     res.status(201).json({ message: 'Message sent successfully', data: message });
@@ -76,13 +86,35 @@ exports.sendMessage = async (req, res) => {
 
 exports.getConversationMessages = async (req, res) => {
   try {
-    const { conversationId } = req.params;
 
-    const messages = await Message.find({ conversationId }).sort('createdAt');
+    const {use: conversationId } = req.query;
+    const {type} = req.query;
+    console.log("ConvosID:,", conversationId)
+    console.log("Type,", type)
 
+    const messages = await Message.find({ conversationId }).populate({
+      path: 'sender', select: 'firstName limitedProfile', })
+    .populate({
+      path: 'recipient',
+      select: 'firstName',
+    }).sort('createdAt');
+
+    console.log("rawMessage", messages)
+
+   
     if (!messages.length) {
       return res.status(404).json({ error: 'No messages found in this conversation' });
     }
+
+    // Format messages to include sender and recipient names
+    /* const messages = rawMessages.map((message) => {
+      return {
+        ...message.toObject(),
+        senderName: message.sender?.firstName || 'Unknown',
+        recipientName: message.recipient?.firstName || 'Unknown',
+      };
+    });
+ */
 
     res.status(200).json({ messages });
   } catch (error) {
@@ -91,7 +123,9 @@ exports.getConversationMessages = async (req, res) => {
   }
 };
 
+
 exports.getUserConversations = async (req, res) => {
+  console.log("The other route hit:")
   try {
     const userId = req.user.id;
 

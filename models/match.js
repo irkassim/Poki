@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const User = require('../models/user');
+const Match = require('../models/match');
 
 const matchSchema = new mongoose.Schema({
   users: [

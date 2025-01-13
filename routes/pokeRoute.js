@@ -5,16 +5,15 @@ const { extendRefreshToken }  = require('../middleware/extendRefreshToken')
 
 const router = express.Router();
 
-//router.post('/:userId', verifyToken, pokeController.sendPoke);
-//router.post('/accept/:userId', verifyToken, pokeController.acceptPoke);
-router.delete('/:userId', verifyToken, pokeController.removePoke);
-
-
 // Create a poke
 router.post('/create', verifyToken,  pokeController.createPoke);
 
 // Accept a poke
-router.patch('/accept/:pokeId', verifyToken, 
-    extendRefreshToken, pokeController.acceptPoke);
+router.post('/accept/:pokeId', verifyToken, 
+   pokeController.acceptPoke);
+
+    // Accept a poke
+router.post('/reject/:pokeId', verifyToken, 
+    pokeController.removePoke);
 
 module.exports = router;

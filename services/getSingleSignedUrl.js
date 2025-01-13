@@ -18,7 +18,7 @@ const getSingleSignedUrl = async (key) => {
     return null;
   }
   
-  console.log("SingleKey:", key)
+  //console.log("SingleKey:", key)
   try {
     const signedUrl = await s3.getSignedUrlPromise('getObject', {
       Bucket: process.env.S3_BUCKET_NAME,
@@ -26,7 +26,7 @@ const getSingleSignedUrl = async (key) => {
       Expires: 3600, // 1 hour in seconds
     });
 
-     console.log("SingleSigned:", signedUrl)
+    // console.log("SingleSigned:", signedUrl)
     return signedUrl;
   } catch (error) {
     console.error(`Error generating signed URL for key: ${key}`, error);

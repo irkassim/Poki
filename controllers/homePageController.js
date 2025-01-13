@@ -5,7 +5,7 @@ const Match = require('../models/match');
 const User = require('../models/user');
 const {fetchSignedAvatarUrl} = require("../utils/fetchSignedAvatarUrl")
 const utils = require('../utils/fetchSignedAvatarUrl');
-console.log(utils); // Verify what is being exported
+//console.log(utils); // Verify what is being exported
 
 
 //Get Pokes
@@ -71,7 +71,7 @@ exports.getPokes = async (req, res) => {
             select: 'key', // Fetch only the `key` field from the `avatar` document
           },}) .lean();
 
-          console.log("matches:", matches )
+         // console.log("matches:", matches )
   
       // Map over matches and fetch signed URLs for avatars
       const matchesWithAvatars = await Promise.all(

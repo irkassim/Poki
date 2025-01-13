@@ -11,8 +11,6 @@ exports.createPoke = async (req, res) => {
     if (!pokee) {
       return res.status(400).json({ error: 'Pokee is required' });
     }
-
-
      // Check if the pokee has blocked the poker
      const pokeeUser = await User.findById(pokee);
 
@@ -64,6 +62,8 @@ exports.createPoke = async (req, res) => {
 
 
 exports.acceptPoke = async (req, res) => {
+
+  //console.log("AcceptPoke Route", req.params.pokeId)
   try {
     const { pokeId } = req.params;
 
@@ -89,6 +89,8 @@ exports.acceptPoke = async (req, res) => {
 };
 
 exports.removePoke = async (req, res) => {
+  
+  //console.log("RejectPoke Route", req.params.pokeId)
   try {
     const userId = req.user.id; // The logged-in user
     const targetUserId = req.params.userId; // The user whose poke is being removed

@@ -1,10 +1,16 @@
 //const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
+const express = require('express');
 const AWS = require('aws-sdk');
 const User = require('../models/user');
+const Match = require('../models/match');
+const Poke = require('../models/pokeModel');
 const Photo = require('../models/Photo'); // Update the path as per your project structure
 const s3Upload  =  require('../services/s3upload');
 const  getSignedUrls  = require('../services/getSignedUrls');
+const getSingleSignedUrl=require('../services/getSingleSignedUrl')
+const querystring = require('querystring');
+const { match } = require('assert');
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
   secretAccessKey: process.env.AWS_SECRET_KEY,
@@ -68,7 +74,7 @@ exports.updateImages = async (req, res) => {
 
     // Upload new photos to S3
     const newPhotos = await s3Upload(files.publicPhoto, userId); // [{ _id, key }]
-    console.log("Uploaded Photos:", newPhotos);
+    //console.log("Uploaded Photos:", newPhotos);
 
     const newPhotoIds = newPhotos.map(photo => photo._id);
     //const newPhotoKeys = newPhotos.map(photo => photo.key);
@@ -95,7 +101,7 @@ exports.updateImages = async (req, res) => {
       src: signedUrls[index],
     }));
 
-    console.log("Public Photos with Signed URLs:", publicPhotosWithSignedUrls);
+    //console.log("Public Photos with Signed URLs:", publicPhotosWithSignedUrls);
 
     // Respond with updated photos
     res.status(200).json({
@@ -115,7 +121,7 @@ exports.getProfile = async (req, res) => {
  
   try {
     const userId = req.user.id; // Extracted from the middleware
-    console.log("User:",req.user.id )
+   // console.log("User:",req.user.id )
 
     if (!req.user.id) {
       return res.status(400).json({ error: 'User ID is required.' });
@@ -132,7 +138,7 @@ exports.getProfile = async (req, res) => {
         // Attach the avatar URL to the user data
         // console.log("Avatarurl:", avatarUrl)
         const userProfile = { ...user };
-        console.log("Profile:",userProfile)
+       // console.log("Profile:",userProfile)
   
     // Send the final response
     res.status(200).json({ user: userProfile });
@@ -142,35 +148,91 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-//Get USER PROFILE WITH ID
+//Get USER PROFILE WITH FEATURES - pokes,matches
 exports.getUserProfile = async (req, res) => {
+  console.log("Get USERProfile Hit")
+  //const parsedQuery = querystring.parse(req.url.split('?')[1]);
+  const {type} = req.query;
+  const { id: userId } = req.params; // Extract match/poke ID from URL params
+  let matchDetails = null ;
+  let pokeDetails=null;
+  const {use: matchOrPokeId} = req.query; // Extract `userId` from query parameters
+
   try {
-    const { id } = req.params;
-
-    // Fetch user data by ID
-    const user = await User.findById(id)
-      .populate({
-        path: 'publicPhotos',
-        select: 'key', // Select only the key for signed URL generation
-      })
-      .lean();
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+         /*  console.log("URL",  req.url);
+          console.log("type",   type);
+          console.log("USERID",  userId);
+          console.log("MatchOrPoke",matchOrPokeId) */
+     
+    //Validation for details
+    if (!matchOrPokeId || !userId) {
+      return res.status(400).json({ error: 'Match/Poke ID or User ID is missing' });
     }
+          // Fetch user data by ID
+        const user = await User.findById(userId)
+          .populate({ path: 'publicPhotos',select: 'key',  }) .lean();
 
+          //console.log("USER",  user.avatar);
+
+         if(matchOrPokeId && type ==="match"){
+             // Match Details
+             matchDetails = await Match.findOne({
+              _id: matchOrPokeId, // Use matchOrPokeId from URL params
+              users: userId,      // Ensure this user is part of the match
+              status: { $in: ['pending', 'accepted'] },
+            }).lean();
+
+         }
+        // Poke Details
+        if(matchOrPokeId && type ==="poke"){
+            pokeDetails = await Poke.findOne({
+            _id: matchOrPokeId, // Use matchOrPokeId from URL params
+            users: userId,      // Ensure this user is part of the poke
+            status: { $in: ['pending', 'accepted'] }, }).lean();
+         }
+
+        // pokeDetails && console.log("PokeDet",pokeDetails)
+
+            if (!user) {
+              return res.status(404).json({ error: 'User not found' });
+            }
+
+            let avatarKey = null;
+            if (user.avatar) {
+              const avatarDoc = await Photo.findById(user.avatar).lean();
+              if (avatarDoc && avatarDoc.key) {
+                avatarKey = avatarDoc.key;
+              } else {
+                console.error('Avatar document or key not found');
+              }
+            }
+        
     // Generate signed URLs for avatar and public photos
-   // const signedAvatarUrl = user.avatar ? await getSignedUrls([user.avatar])[0]: null;
+   // Generate signed URL for the avatar
+   const signedAvatarUrl = avatarKey ? await getSingleSignedUrl(avatarKey) : null;
+
+    //console.log("User Avatar:",signedAvatarUrl);
     const signedPublicPhotos = user.publicPhotos.length ?
      await getSignedUrls(user.publicPhotos.map((photo) => photo.key)) : [];
+    // console.log("SignedPublic:", signedPublicPhotos)
 
     // Respond with user data and signed URLs
     res.status(200).json({
       user: {
         ...user,
-       // avatar: signedAvatarUrl,
+        avatar: signedAvatarUrl,
         publicPhotos: signedPublicPhotos,
       },
+      matchDetails: matchDetails ? {
+            status: matchDetails.status,
+            duration: matchDetails.createdAt,
+            commonInterests: 'Movies, Scorpio', // Example interests
+          } : null,
+      pokeDetails: pokeDetails ? {
+            status: pokeDetails.status,
+            duration: pokeDetails.createdAt,
+            commonInterests: 'Movies, Scorpio', // Example interests
+          }: null,
     });
   } catch (error) {
     console.error('Error fetching user profile:', error.message);
@@ -224,7 +286,7 @@ exports.setUserAvatar = async (req, res) => {
   try {
     const userId = req.user.id; // Assuming `req.user` contains the authenticated user's details
     const { avatar } = req.body; // Avatar ID sent from the frontend
-    console.log("sentfromFrontEndAvatar:",avatar)
+    //console.log("sentfromFrontEndAvatar:",avatar)
 
     if (!avatar) {
       return res.status(400).json({ error: 'Avatar ID is required' });

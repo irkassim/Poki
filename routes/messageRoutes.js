@@ -3,17 +3,17 @@ const router = express.Router();
 const { verifyToken } = require('../utils/jwtUtilities');
 const messageController = require('../controllers/messageController');
 const { extendRefreshToken } = require('../middleware/extendRefreshToken');
-
+const authenticate=require('../utils/authenticate');
 // Send a message
 router.post('/send', verifyToken, 
-    extendRefreshToken, messageController.sendMessage);
+  messageController.sendMessage);
 
 // Get all messages in a conversation
-router.get('/conversation/:conversationId', verifyToken, 
-    extendRefreshToken, messageController.getConversationMessages);
+router.get('/conversation/:conversationId', authenticate, 
+    messageController.getConversationMessages);
 
 // Get all conversations for a user
-router.get('/conversations', verifyToken,
-    extendRefreshToken, messageController.getUserConversations);
+router.get('/conversations', authenticate,
+     messageController.getUserConversations);
 
 module.exports = router;

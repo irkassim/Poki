@@ -3,13 +3,13 @@ const User = require('../models/user');
 
 const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
+  console.log("Authenticate",req.body)
 
   if (!authHeader) {
     return res.status(401).json({ error: 'Authorization header missing' });
   }
 
   const token = authHeader.split(' ')[1];
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);

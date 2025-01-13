@@ -13,6 +13,8 @@ router.post('/initiate/:userId', verifyToken,
 router.post('/accept/:matchId', verifyToken,
       matchController.acceptMatch);
 
+      console.log("RouteFound")
+
 //reject match
 router.post('/reject/:matchId', verifyToken,
       matchController.rejectMatch);
