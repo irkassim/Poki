@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const  getZodiacSign = require('../utils/zodiacs');
+
 
 const userSchema = new mongoose.Schema({
   firstName: { type: String },
@@ -9,6 +11,7 @@ const userSchema = new mongoose.Schema({
   bio: { type: String },
   refreshToken: { type: String },
   occupation: { type: String },
+  userZodiac: { type: [String], default: [] }, // Signs they're interested in
  
   gender: { type: String, enum: ['Male', 'Female', 'Non-Binary', 'Other','gender'], default: 'gender' },
   dateOfBirth: { type: Date, required: true },
@@ -117,6 +120,38 @@ const userSchema = new mongoose.Schema({
       },
     },
   },
+  // New field for user preferences
+  userPreferences: {
+    maxDistance: {
+      type: Number,
+      default: 50, // Default maximum distance (e.g., 50 km)
+      min: [3, 'Minimum distance is 3 km'], // Minimum value
+      max: [199, 'Maximum distance is 199 km'], // Maximum value
+    },
+    ageRange: {
+      type: {
+        min: {
+          type: Number,
+          default: 18, // Default minimum age
+          min: [18, 'Minimum age is 18'], // Minimum value
+          max: [100, 'Maximum age is 100'], // Ensure valid age range
+        },
+        max: {
+          type: Number,
+          default: 30, // Default maximum age
+          min: [18, 'Minimum age is 18'], // Ensure valid age range
+          max: [100, 'Maximum age is 100'], // Maximum value
+        },
+      },
+      validate: {
+        validator: function (v) {
+          // Ensure minAge <= maxAge
+          return v.min <= v.max;
+        },
+        message: 'Minimum age must be less than or equal to maximum age',
+      },
+    },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -124,6 +159,14 @@ const userSchema = new mongoose.Schema({
 userSchema.virtual('hiddenMemoriesCount').get(function () {
   return this.memories.filter((memory) => memory.isHidden).length;
 });
+
+// Pre-save middleware to calculate and set userZodiac
+/* userSchema.pre('save', function (next) {
+  if (this.dateOfBirth) {
+    this.userZodiac = getZodiacSign(this.dateOfBirth);
+  }
+  next();
+}); */
 
 module.exports = mongoose.model('User', userSchema);
 

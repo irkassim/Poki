@@ -1,5 +1,6 @@
 const  getSignedUrls = require('../services/getSignedUrls'); //
 const User = require('../models/user');
+//const Photo = require('./models/photo'); // Import the Photo model
 
 exports.fetchSignedAvatarUrl = async (user) => {
     if (!user.avatar || !user.avatar.key) {

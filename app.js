@@ -50,7 +50,8 @@ const profileRoutes = require('./routes/profileRoute')
 const pokeRoutes = require("./routes/pokeRoute")
 const messageRoutes = require("./routes/messageRoutes")
 const homePageRoutes = require("./routes/homePageRoutes")
-const blockRoutes = require("./routes/messageRoutes")
+const blockRoutes = require("./routes/blockRoutes")
+const peopleRoute = require("./routes/peopleRoute")
 
 // API Routes
 app.use('/api/auth', authRoutes);         // Authentication routes
@@ -60,8 +61,10 @@ app.use('/api/location', locationRoutes); // Location-based routes
 app.use('/api/profile', profileRoutes); // Profile routes
 app.use('/api/pokes', pokeRoutes); //poking route
 app.use('/api/message', messageRoutes); //messages route
+app.use('/api/users', peopleRoute); //messages route
+
 app.use('/api/home',  homePageRoutes); //homepage route
-app.use('/api/block', blockRoutes); //poking route
+//app.use('/api/block', blockRoutes); //blocking route
 
 // Health Check Route
 app.get('/api/health', (req, res) => {

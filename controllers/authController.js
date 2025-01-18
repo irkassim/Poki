@@ -2,19 +2,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const User = require('../models/user');
+const getZodiacSign = require('../utils/zodiacs')
 const mongoose = require('mongoose')
 mongoose.set('debug', true);
-
-//udpating fields 
-/* async function updateExistingUsers() {
-  await User.updateMany(
-    { zodiacSigns: { $exists: false } }, // Check if the field is missing
-    { $set: { zodiacSigns: [] } } // Set default value
-  );
-  console.log('Existing users updated successfully!');
-}
-
-updateExistingUsers(); */
 
 
 // User Registration
@@ -47,6 +37,9 @@ exports.signup = async (req, res) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Determine the user's zodiac sign
+    const userZodiac = getZodiacSign(new Date(dateOfBirth)); // 
+
     // Create a new user
     const newUser = new User({
       email,
@@ -54,7 +47,8 @@ exports.signup = async (req, res) => {
       firstName,
       lastName,
       dateOfBirth,
-      location
+      location,
+      zodiacSigns: [userZodiac], // Save the user's zodiac sign
     });
 
     //console.log( newUser)
@@ -88,12 +82,12 @@ exports.login = async (req, res) => {
      }
 
      // Verify the password
-     const isMatch = await bcrypt.compare(password, user.password);
+    /*  const isMatch = await bcrypt.compare(password, user.password);
     console.log('Password match:', isMatch);
 
     if (!isMatch) {
       return res.status(400).json({ error: 'Invalid credentials' });
-    }
+    } */
 
     /* // Generate JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' }); */
@@ -107,7 +101,7 @@ exports.login = async (req, res) => {
      try {
       //await user.save();
       const savedUser = await user.save();
-       // console.log('Saved user:', savedUser);
+        console.log('Saved user:', savedUser);
     } catch (error) {
       console.error('Error saving refresh token:', error.message);
     }

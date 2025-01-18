@@ -1,6 +1,6 @@
 //const { validationResult } = require('express-validator');
-const mongoose = require('mongoose');
-const express = require('express');
+//const mongoose = require('mongoose');
+//const express = require('express');
 const AWS = require('aws-sdk');
 const User = require('../models/user');
 const Match = require('../models/match');
@@ -9,33 +9,41 @@ const Photo = require('../models/Photo'); // Update the path as per your project
 const s3Upload  =  require('../services/s3upload');
 const  getSignedUrls  = require('../services/getSignedUrls');
 const getSingleSignedUrl=require('../services/getSingleSignedUrl')
-const querystring = require('querystring');
-const { match } = require('assert');
+//const querystring = require('querystring');
+//const { match } = require('assert');
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
   secretAccessKey: process.env.AWS_SECRET_KEY,
   region: process.env.AWS_REGION,
 });
 
-//Update profile
-// Update Text Fields
+//Update profile Update-Text Fields
 exports.updateTextFields = async (req, res) => {
+  
   try {
     const userId = req.user.id;
-    const updates = req.body;
+    //const updates = req.body;
+    const updates = req.body.updates || {};
 
     console.log('Text Updates:', updates);
 
     // Dynamically get all valid fields from the User schema
-    const validFields = ['bio', 'zodiacSigns', 'favorite', 'education', 'datingGoals', "gender","preference", "isProfileComplete", 'hobbies', 'occupation', 'username'];
+    const validFields = ['bio', 'zodiacSigns', 'favorite', 'education', 'datingGoals', "gender","preference", "isProfileComplete", 'hobbies', 'occupation', ];
+    
+    //const userUpdates = updates.updates || {}; //
+   
     
     // Filter updates to include only valid fields
     const filteredUpdates = Object.keys(updates).reduce((acc, key) => {
       if (validFields.includes(key)) {
         acc[key] = updates[key];
+        //console.log('Valid Fields:', validFields);
+        //console.log('Update Keys:', Object.keys(updates));
       }
       return acc;
     }, {});
+
+    console.log("filteredUPDATES:", filteredUpdates)
 
     // Reject Empty Updates
     if (Object.keys(filteredUpdates).length === 0) {
@@ -148,7 +156,7 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-//Get USER PROFILE WITH FEATURES - pokes,matches
+//Get USER PROFILE WITH FEATURES feeds homepage - pokes,matches
 exports.getUserProfile = async (req, res) => {
   console.log("Get USERProfile Hit")
   //const parsedQuery = querystring.parse(req.url.split('?')[1]);
@@ -240,7 +248,7 @@ exports.getUserProfile = async (req, res) => {
   }
 };
 
-//Userphotos
+//Userphotos feeds userphotos
 exports.getUserWithPhotoUrls = async (req, res) => {
   try {
     const userId = req.user.id;

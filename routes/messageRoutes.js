@@ -3,7 +3,7 @@ const router = express.Router();
 const { verifyToken } = require('../utils/jwtUtilities');
 const messageController = require('../controllers/messageController');
 const { extendRefreshToken } = require('../middleware/extendRefreshToken');
-const authenticate=require('../utils/authenticate');
+const authenticate = require('../utils/authenticate');
 // Send a message
 router.post('/send', verifyToken, 
   messageController.sendMessage);

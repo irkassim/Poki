@@ -1,4 +1,4 @@
-const express = require('express');
+/* const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../utils/jwtUtilities');
 const userController = require('../controllers/userController');
@@ -10,3 +10,4 @@ router.post('/unblock', verifyToken, userController.unblockUser);
 
 
 module.exports = router;
+ */

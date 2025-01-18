@@ -114,7 +114,7 @@ exports.getPokes = async (req, res) => {
           select: 'content createdAt sender',
         })
         .lean();
-  
+        //console.log("convos:", conversations)
       // Map over conversations and fetch signed URLs for participants' avatars
       const conversationsWithAvatars = await Promise.all(
         conversations.map(async (conversation) => {
