@@ -121,6 +121,17 @@ const userSchema = new mongoose.Schema({
     },
   },
   // New field for user preferences
+  compatibilityTest: {
+    responses: [
+      {
+        category: { type: String, enum: ['Personality', 'Values', 'Mindset'], required: true },
+        questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question', required: true },
+        answer: { type: Number, required: true }, // Assume answers are on a scale (e.g., 1-5)
+      },
+    ],
+    completionStatus: { type: Boolean, default: false }, // Whether the user completed the test
+  },
+  
   userPreferences: {
     maxDistance: {
       type: Number,

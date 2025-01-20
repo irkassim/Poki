@@ -5,7 +5,7 @@ const peopleController = require('../controllers/peopleController');
 
 
 // Like a profile
-router.get('/people', 
+router.get('/people', authenticate,
      peopleController.getPeople);
 
 
