@@ -8,17 +8,18 @@ const parsedQuery = querystring.parse(req.url.split('?')[1]);
 const matchId = parsedQuery.matchId;
 console.log("MATCHID", matchId); */
 
-
+//Creating or Match Request
 exports.initiateMatch = async (req, res) => {
   try {
     const userId = req.user.id; // The logged-in user
     const targetUserId = req.params.userId; // The user to initiate a match with
 
+    //TODO:: CHECK IF MATCH INITIATOR IS NOT BLOCKED
+
     // Check if a match request already exists
     const existingMatch = await Match.findOne({
-      users: { $all: [userId, targetUserId] },
-      status: 'pending',
-    });
+      users: { $all: [userId, targetUserId] }, status: 'pending',  });
+
     if (existingMatch) {
       return res.status(400).json({ message: 'Match request already initiated' });
     }
@@ -37,6 +38,7 @@ exports.initiateMatch = async (req, res) => {
   }
 };
 
+//Accepting a match
 exports.acceptMatch = async (req, res) => {
   try {
     const matchId = req.params.matchId; // Match request ID
@@ -64,6 +66,8 @@ exports.acceptMatch = async (req, res) => {
   }
 };
 
+
+//Rejecting a Match 
 exports.rejectMatch = async (req, res) => {
   const { matchId } = req.params; // Extract userId from the route
  // const {userId } = req.query.use; // Extract matchId from the query string

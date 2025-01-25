@@ -1,0 +1,40 @@
+service: poki-backend
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-central-1 # Change as per your preference
+  profile: Rais
+  memorySize: 2048
+  stage: dev
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource:
+        - arn:aws:s3:::pokistorage/*
+
+  environment:
+    DB_CONNECTION: ${env:DB_CONNECTION}
+    S3_BUCKET: ${env:S3_BUCKET_NAME}
+    JWT_SECRET: ${env:JWT_SECRET}
+    JWT_REFRESH_SECRET: ${env:JWT_REFRESH_SECRET}
+
+functions:
+  app:
+    handler: lambdaHandler.handler
+    events:
+      - httpApi:
+          path: '/'
+          method: '*'
+
+package:
+  exclude:
+    - node_modules/**
+    - .git/**  # Exclude git files
+    - .serverless/**  # Exclude previous deployments
+    - tests/**  # Exclude test files
+    - logs/**   # Exclude log files
+
+plugins:
+  - serverless-dotenv-plugin

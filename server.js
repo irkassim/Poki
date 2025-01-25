@@ -1,133 +1,125 @@
 const app = require('./app');
 const mongoose = require('mongoose');
-const WebSocket = require('ws');
 const http = require('http');
-const express = require('express');
-const logger = require('./utils/logger');
-const dotenv=require("dotenv")
-dotenv.config()//
+const { Server } = require('socket.io');
+const User = require('./models/user');
+const dotenv = require('dotenv');
+const Conversation = require('./models/conversationModel');
+const Photo = require('./models/Photo');
+const getSingleSignedUrl=require('./services/getSingleSignedUrl')
+
+dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB
-//ocnstructing URL for connection
+// MongoDB Connection
 const mongodb_connection_string = () => {
   const { DB_CLUSTER, DB_NAME, DB_USER, DB_PSWD } = process.env;
-  return`mongodb+srv://${DB_USER}:${DB_PSWD}@${DB_CLUSTER}.mongodb.net/${DB_NAME}?retryWrites=true&w=majority`;
-}; 
+  return `mongodb+srv://${DB_USER}:${DB_PSWD}@${DB_CLUSTER}.mongodb.net/${DB_NAME}?retryWrites=true&w=majority`;
+};
 
-//Function to connect to Mongodb
 const mongodb_connection = async () => {
-  //Establish database connection
   try {
     const connection_string = mongodb_connection_string();
     await mongoose.connect(connection_string);
-  /*   app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    }); */
-    
-    console.log("connected to mongodb", connection_string)
+    console.log('Connected to MongoDB:', connection_string);
   } catch (err) {
     console.error(err);
-    //throw new err();
   }
 };
 
 mongodb_connection();
 
-/* mongoose.connect(process.env.DB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Database connection error:', err);
-  }); */
-
-
-// Create HTTP and WebSocket servers
+// Create HTTP and Socket.IO server
 const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*', // Adjust this to allow specific origins
+    methods: ['GET', 'POST'],
+  },
+});
 
-// Health Check Route
-/* app.get('/api/health', (req, res) => {
-  res.status(200).json({ message: 'Poki backend is running!' });
-}); */
-// Create a WebSocket server
-const wss = new WebSocket.Server({ server });
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('New Socket.IO connection:', socket.id);
 
-// Store clients in conversation-specific groups
-const conversationClients = new Map();
+  // Welcome message
+  socket.emit('welcome', { message: 'Welcome to the Socket.IO server!' });
 
-// WebSocket connection handler
-wss.on('connection', (ws) => {
-  console.log('New WebSocket connection');
- 
   // Handle incoming messages
-    ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the WebSocket server!' }));
-  
-     ws.on('message', async (message) => {
-      console.log(`Received message server: ${message}`);
-      console.log('Raw message received server:', message);
-      console.log("HELLOW FROM SERVER ")
-  
-      try {
-       const messageString = Buffer.isBuffer(message) ? message.toString() : message;
-        const parsedMessage = JSON.parse(messageString);
-        //const {recipient: recipientId, content } = parsedMessage;
-        const sender = await User.findById(parsedMessage.sender);
-        const recipient = await User.findById(parsedMessage.recipient);
+  socket.on('message', async (data) => {
+    console.log('Received message from client:', data);
 
-        if (!sender || !recipient) {
-          console.error('Sender or Recipient not found in the database.');
-          return;
-        }
-        const newMessage = {
-          _id: parsedMessage._id.startsWith('temp-') ? new ObjectId().toString() : parsedMessage._id,
-          content: parsedMessage.content,
-          sender: { _id: sender._id, firstName: sender.firstName, avatar: sender.avatar },
-          recipient: { _id: recipient._id, firstName: recipient.firstName, avatar: recipient.avatar },
-          createdAt: new Date().toISOString(),
-        };
+    try {
+      const { sender, recipient, content } = data;
+      const senderUser = await User.findById(sender);
+      const recipientUser = await User.findById(recipient);
+       // Check if a conversation already exists
+          
 
-        console.log("SERVERNEWMESSAGE:", newMessage)
+      if (!senderUser || !recipientUser) {
+        console.error('Sender or recipient not found in the database.');
+        return;
+      }
+      let conversation = await Conversation.findOne({
+        participants: { $all: [sender, recipient] },
+      });
+      let recipientAvatarSignedUrl = null;
+      let senderAvatarSignedUrl = null;
+
       
-          // Broadcast only chat messages
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(newMessage));
-          }
-        });
-      } catch (error) {
-        console.error('Invalid JSON message received:', message);
-      }
 
-    });
- 
-  
+              if (senderUser?.avatar) {
+                const senderPhoto = await Photo.findById(senderUser.avatar).lean();
+                if (senderPhoto && senderPhoto.key) {
+                  //console.log("SenderPhoto:",senderPhoto)
+                  senderAvatarSignedUrl = await getSingleSignedUrl(senderPhoto.key);
+                }
+              }
+      
+              // Fetch recipient avatar URL
+            if (recipientUser?.avatar) {
+              const recipientPhoto = await Photo.findById(recipientUser.avatar).lean();
 
-  // Handle WebSocket disconnection
-  ws.on('close', () => {
-    console.log('WebSocket connection closed');
-    // Remove the client from all conversation groups
-    conversationClients.forEach((clients, conversationId) => {
-      clients.delete(ws);
-      if (clients.size === 0) {
-        conversationClients.delete(conversationId);
-      }
-    });
+              if (recipientPhoto && recipientPhoto.key) {
+                //console.log("recipientPhoto:",recipientPhoto)
+                recipientAvatarSignedUrl = await getSingleSignedUrl(recipientPhoto.key);
+                //console.log("recipientPhotoKEY:",recipientPhoto.key)
+                //console.log("recipientAvatar:",recipientAvatarSignedUrl)
+              }
+             }
+
+             senderAvatarSignedUrl && console.log("sendurl:", senderAvatarSignedUrl)
+             recipientAvatarSignedUrl && console.log("sendurl:", recipientAvatarSignedUrl)
+      const newMessage = {
+        _id: data._id.startsWith('temp-') ? new mongoose.Types.ObjectId().toString() : data._id,
+        conversationId: conversation._id  || null,
+        content,
+        sender: { _id: senderUser._id, firstName: senderUser.firstName,
+           avatar:senderUser.avatar, senderAvatarSignedUrl },
+
+        recipient: { _id: recipientUser._id, firstName: recipientUser.firstName,
+           avatar:recipientUser.avatar, recipientAvatarSignedUrl },
+        createdAt: new Date().toISOString(),
+        type: 'chat',
+      };
+
+      console.log('SERVER NEW MESSAGE:', newMessage);
+
+      // Broadcast message to all connected clients
+      io.emit('newMessage', newMessage);
+    } catch (error) {
+      console.error('Error handling message:', error);
+    }
   });
 
-
-  // Send a welcome message to the newly connected client
-  ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the WebSocket server!' }));
-
-
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('Socket.IO connection disconnected:', socket.id);
+  });
 });
 
 // Start the server
-server.listen(process.env.PORT || 5000, () => {
-  console.log(`Server running on port ${process.env.PORT || 5000}`);
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
-

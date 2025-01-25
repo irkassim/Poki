@@ -33,17 +33,15 @@ exports.updateLocation = async (req, res) => {
 
      const updatedUser =  await user.save();
      //console.log("updatedUser:", updatedUser )
-      res.status(200).json({ message: 'Location saved successfully.' });
+      res.status(200).json({ message: 'Location saved successfully.', updatedUser });
     } catch (err) {
       console.error('Error saving location:', err.message);
       res.status(500).json({ error: 'Internal server error.' });
     }
-
-
 };
 
 
-//Get Suggestions
+//Get Suggestions not in use
 exports.getSuggestions = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);

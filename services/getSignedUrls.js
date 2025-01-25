@@ -2,10 +2,12 @@ const AWS = require('aws-sdk');
 require('dotenv').config();
 
 const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
+  accessKeyId: process.env.CUSTOM_AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.CUSTOM_AWS_SECRET_ACCESS_KEY,
+  region: process.env.CUSTOM_AWS_REGION,
 });
+
+
 
 //console.log('AWS_ACCESS_KEY_ID:', process.env.AWS_ACCESS_KEY_ID);
 //console.log('AWS_SECRET_ACCESS_KEY:', process.env.AWS_SECRET_ACCESS_KEY);

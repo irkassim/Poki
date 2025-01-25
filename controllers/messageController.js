@@ -3,14 +3,15 @@ const Conversation = require('../models/conversationModel');
 const Poke = require('../models/pokeModel');
 const Match = require('../models/match');
 const User = require('../models/user');
-const {fetchSignedAvatarUrl} = require("../utils/fetchSignedAvatarUrl")
+//const {fetchSignedAvatarUrl} = require("../utils/fetchSignedAvatarUrl")
 const Photo = require('../models/Photo'); // Update the path as per your project structure
-const  getSignedUrls  = require('../services/getSignedUrls');
+//const  getSignedUrls  = require('../services/getSignedUrls');
 const getSingleSignedUrl=require('../services/getSingleSignedUrl')
+//const { Server } = require('socket.io');
 
 
 exports.sendMessage = async (req, res) => {
-  console.log("SendMessage Hit:", req.body)
+ // console.log("SendMessage Hit:", req.body)
   try {
     const { recipient, content } = req.body;
     const sender = req.user.id;
@@ -53,14 +54,7 @@ exports.sendMessage = async (req, res) => {
       return res.status(400).json({ error: "No accepted poke between users." });
     }
     
-    console.log("Poke found:", poke);
-    
-    
-    if (!poke) {
-      console.error("Poke not found or not accepted:", { sender, recipient });
-      return res.status(400).json({ error: "No accepted poke between users." });
-    }
-    console.log("here is the Poke:", poke)
+   // console.log("Poke found:", poke);
 
     const match = await Match.findOne({
       users: { $all: [sender, recipient] },
@@ -89,18 +83,22 @@ exports.sendMessage = async (req, res) => {
     // Proceed with creating and sending the message
     const message = new Message({
       conversationId: conversation._id,
-      sender,
-      recipient,
-      content,
-    });
+      sender,recipient, content});
 
     // Update the conversation's lastMessage field
     await Conversation.findByIdAndUpdate(conversation._id, {
-      lastMessage: message._id,
-      updatedAt: Date.now(), // Update the `updatedAt` field as well
-    });
-
+      lastMessage: message._id, updatedAt: Date.now() });
     await message.save();
+
+    /* const io = socket(Server)
+    io.on('connection', (socket) => {
+      console.log('New Socket.IO connection:', socket.id);
+     
+     // emit event to send message data to connected clients
+     io.to(conversation._id,
+      sender,recipient).emit('chat', message);
+    }) */
+    
 
     res.status(201).json({ message: 'Message sent successfully', data: message });
   } catch (error) {
@@ -113,7 +111,7 @@ exports.getConversationMessages = async (req, res) => {
   try {
 
     const {use: conversationId } = req.query;
-    const {type} = req.query;
+   // const {type} = req.query;
     /* console.log("ConvosID:,", conversationId)
     console.log("Type,", type) */
 
@@ -153,14 +151,8 @@ exports.getConversationMessages = async (req, res) => {
               // Return enriched message
               return {
                 ...msg.toObject(),
-                sender: {
-                  ...msg.sender.toObject(),
-                  avatarSignedUrl: senderAvatarSignedUrl,
-                },
-                recipient: {
-                  ...msg.recipient.toObject(),
-                  avatarSignedUrl: recipientAvatarSignedUrl,
-                },
+                sender: {...msg.sender.toObject(), avatarSignedUrl: senderAvatarSignedUrl},
+                recipient: {...msg.recipient.toObject(),avatarSignedUrl: recipientAvatarSignedUrl},
               };
             })
           );
@@ -187,12 +179,9 @@ exports.getUserConversations = async (req, res) => {
     const userId = req.user.id;
 
     const conversations = await Conversation.find({ participants: userId })
-      .populate('participants', 'lastName limitedProfile')
-      .populate('lastMessage');
+      .populate('participants', 'lastName limitedProfile') .populate('lastMessage');
 
       //console.log("The other route hit:", conversations)
-
-
 
     if (!conversations.length) {
       return res.status(404).json({ error: 'No conversations found' });

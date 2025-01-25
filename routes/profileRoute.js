@@ -51,6 +51,7 @@ const validateProfileUpdate = [
     next();
   },
    verifyToken,  profileController.updateImages);
+   
 
    //GET PHOTOS
    router.put('/photos', verifyToken, profileController.getUserWithPhotoUrls);

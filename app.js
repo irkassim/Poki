@@ -6,6 +6,9 @@ const cors = require('cors');
 const logger = require('./utils/logger');
 const { mongodb_connection } = require("./config/database");
 const { uploadFields } = require('./middleware/multerConfig');
+const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
+
+
 const path = require('path');
 
 // Load environment variables
@@ -13,6 +16,9 @@ dotenv.config();
 
 // Create Express app
 const app = express();
+
+//lambda serverless 
+//app.use(awsServerlessExpressMiddleware.eventContext());
 
 // Database connection
 mongodb_connection().then(() => {
@@ -46,14 +52,21 @@ const authRoutes = require('./routes/authRoute');
 const matchRoutes = require('./routes/matchRoutes');
 const memoryRoutes = require('./routes/memoryRoutes');
 const locationRoutes = require('./routes/locationRoutes');
-const profileRoutes = require('./routes/profileRoute')
-const pokeRoutes = require("./routes/pokeRoute")
-const messageRoutes = require("./routes/messageRoutes")
-const homePageRoutes = require("./routes/homePageRoutes")
-const blockRoutes = require("./routes/blockRoutes")
-const peopleRoute = require("./routes/peopleRoute")
-const questionRoute = require("./routes/questionRoute")
+const profileRoutes = require('./routes/profileRoute');
+const pokeRoutes = require('./routes/pokeRoute');
+const messageRoutes = require('./routes/messageRoutes');
+const homePageRoutes = require('./routes/homePageRoutes');
+//const blockRoutes = require('./routes/blockRoutes');
+const peopleRoute = require('./routes/peopleRoute');
+const questionRoute = require('./routes/questionRoute');
 
+
+
+ /*  const apiGatewayBasePath = process.env.NODE_ENV === 'production'
+  ? '/poki-backend-dev-app'
+  : '/dev/poki-backend-dev-app';  */// Add /dev for the dev stage
+ 
+// API Routes
 // API Routes
 app.use('/api/auth', authRoutes);         // Authentication routes
 app.use('/api/match', matchRoutes);       // Matchmaking routes
@@ -67,6 +80,21 @@ app.use('/api/compatibility', questionRoute); //messages route
 
 app.use('/api/home',  homePageRoutes); //homepage route
 //app.use('/api/block', blockRoutes); //blocking route
+
+
+/* app.use(`${apiGatewayBasePath}/api/auth`, authRoutes); // Authentication routes
+app.use(`${apiGatewayBasePath}/api/match`, matchRoutes); // Matchmaking routes
+app.use(`${apiGatewayBasePath}/api/memory`, memoryRoutes); // Memory upload routes
+app.use(`${apiGatewayBasePath}/api/location`, locationRoutes); // Location-based routes
+app.use(`${apiGatewayBasePath}/api/profile`, profileRoutes); // Profile routes
+app.use(`${apiGatewayBasePath}/api/pokes`, pokeRoutes); // Poking routes
+app.use(`${apiGatewayBasePath}/api/message`, messageRoutes); // Messages route
+app.use(`${apiGatewayBasePath}/api/users`, peopleRoute); // People route
+app.use(`${apiGatewayBasePath}/api/compatibility`, questionRoute); // Compatibility test route
+
+app.use(`${apiGatewayBasePath}/api/home`, homePageRoutes); // Homepage route
+// app.use(`${apiGatewayBasePath}/api/block`, blockRoutes); // Blocking route */
+
 
 // Health Check Route
 app.get('/api/health', (req, res) => {

@@ -12,10 +12,12 @@ const getSingleSignedUrl=require('../services/getSingleSignedUrl')
 //const querystring = require('querystring');
 //const { match } = require('assert');
 const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_KEY,
-  region: process.env.AWS_REGION,
+  accessKeyId: process.env.CUSTOM_AWS_ACCESS_KEY,
+  secretAccessKey: process.env.CUSTOM_AWS_SECRET_KEY,
+  region: process.env.CUSTOM_AWS_REGION,
 });
+
+
 
 //Update profile Update-Text Fields
 exports.updateTextFields = async (req, res) => {
@@ -32,7 +34,6 @@ exports.updateTextFields = async (req, res) => {
     
     //const userUpdates = updates.updates || {}; //
    
-    
     // Filter updates to include only valid fields
     const filteredUpdates = Object.keys(updates).reduce((acc, key) => {
       if (validFields.includes(key)) {
@@ -112,10 +113,8 @@ exports.updateImages = async (req, res) => {
     //console.log("Public Photos with Signed URLs:", publicPhotosWithSignedUrls);
 
     // Respond with updated photos
-    res.status(200).json({
-      message: 'Images updated successfully',
-      publicPhotos: publicPhotosWithSignedUrls,
-    });
+    res.status(200).json({message: 'Images updated successfully',
+      publicPhotos: publicPhotosWithSignedUrls, });
   } catch (error) {
     console.error('Image Upload Error:', error);
     res.status(500).json({ error: 'Failed to update images' });
@@ -177,20 +176,16 @@ exports.getUserProfile = async (req, res) => {
       return res.status(400).json({ error: 'Match/Poke ID or User ID is missing' });
     }
           // Fetch user data by ID
-        const user = await User.findById(userId)
-          .populate({ path: 'publicPhotos',select: 'key',  }) .lean();
+        const user = await User.findById(userId).populate({ path: 'publicPhotos',select: 'key',  }) .lean();
 
           //console.log("USER",  user.avatar);
 
          if(matchOrPokeId && type ==="match"){
              // Match Details
-             matchDetails = await Match.findOne({
-              _id: matchOrPokeId, // Use matchOrPokeId from URL params
-              users: userId,      // Ensure this user is part of the match
-              status: { $in: ['pending', 'accepted'] },
-            }).lean();
+             matchDetails = await Match.findOne({_id: matchOrPokeId,   users: userId,   
+                status: { $in: ['pending', 'accepted'] },}).lean();
+              }
 
-         }
         // Poke Details
         if(matchOrPokeId && type ==="poke"){
             pokeDetails = await Poke.findOne({
@@ -226,11 +221,8 @@ exports.getUserProfile = async (req, res) => {
 
     // Respond with user data and signed URLs
     res.status(200).json({
-      user: {
-        ...user,
-        avatar: signedAvatarUrl,
-        publicPhotos: signedPublicPhotos,
-      },
+      user: { ...user, avatar: signedAvatarUrl, publicPhotos: signedPublicPhotos},
+
       matchDetails: matchDetails ? {
             status: matchDetails.status,
             duration: matchDetails.createdAt,
@@ -240,8 +232,8 @@ exports.getUserProfile = async (req, res) => {
             status: pokeDetails.status,
             duration: pokeDetails.createdAt,
             commonInterests: 'Movies, Scorpio', // Example interests
-          }: null,
-    });
+          }: null});
+          
   } catch (error) {
     console.error('Error fetching user profile:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });

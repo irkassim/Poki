@@ -1,0 +1,308 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "AppLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/poki-backend-dev-app"
+      }
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "poki-backend",
+                  "dev",
+                  "lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup",
+                    "logs:TagResource"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/poki-backend-dev*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/poki-backend-dev*:*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject"
+                  ],
+                  "Resource": "arn:aws:s3:::pokistorage/*"
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              "poki-backend",
+              "dev",
+              {
+                "Ref": "AWS::Region"
+              },
+              "lambdaRole"
+            ]
+          ]
+        }
+      }
+    },
+    "AppLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "serverless-framework-deployments-eu-central-1-3866268a-3d80",
+          "S3Key": "serverless/poki-backend/dev/1737658367052-2025-01-23T18:52:47.052Z/poki-backend.zip"
+        },
+        "Handler": "lambdaHandler.handler",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "poki-backend-dev-app",
+        "MemorySize": 2048,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "DB_CONNECTION": "dbAdmin:PfqRqc0qBPLCMelf@vod.pkpti6c.mongodb.net/Pokieme?retryWrites=true&w=majority",
+            "S3_BUCKET": "pokistorage",
+            "JWT_SECRET": "meine3150TouHajLimanFor8521",
+            "JWT_REFRESH_SECRET": "spark3poki79@jeok16j",
+            "SECRET_KEY": "vodPlatform",
+            "NODE_ENV": "development",
+            "DEBUG": "true",
+            "DB_CLUSTER": "vod.pkpti6c",
+            "DB_NAME": "Pokieme",
+            "DB_PSWD": "PfqRqc0qBPLCMelf",
+            "DB_USER": "dbAdmin",
+            "PORT": "5000",
+            "CUSTOM_AWS_ACCESS_KEY": "AKIAUPMYNBIOB3XFHSPZ",
+            "CUSTOM_AWS_SECRET_KEY": "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",
+            "CUSTOM_AWS_REGION": "eu-central-1",
+            "S3_BUCKET_NAME": "pokistorage",
+            "CUSTOM_API_GATEWAY_BASE_PATH": "https://39yafrccu1.execute-api.eu-central-1.amazonaws.com/dev",
+            "FLUTTERWAVE_SECRET_KEY": "<<FLUTTERWAVE_SECRET_KEY>>",
+            "PAYSTACK_SECRET_KEY": "<<PAYSTACK_SECRET_KEY>>",
+            "PAYPAL_CLIENT_SECRET": "<<PAYPAL_CLIENT_SECRET>>",
+            "PAYPAL_MODE": "sandbox",
+            "PAYPAL_CLIENT_ID": "<<PAYPAL_CLIENT_ID>>",
+            "IFMA_API_URL": "http://localhost:5000",
+            "IFMA_HOMEPAGE": "https://www.pokieme.com",
+            "IFMA2024_IMAGES_AWS_ACCESS_KEY_ID": "<<IFMA2024_IMAGES_AWS_ACCESS_KEY_ID>>",
+            "ADMIN_EMAIL": "<<ADMIN_EMAIL>>",
+            "CUSTOM_AWS_SDK_LOAD_CONFIG": "1"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "AppLogGroup"
+      ]
+    },
+    "AppLambdaVersionshyvndSkq3pDciNfW18EOSqZO5pLpiipuK2uGr6PE": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "AppLambdaFunction"
+        },
+        "CodeSha256": "8H2BsFF1KnpobMz+zdV3w62TdhAXKPtw0hVG7wwVipc="
+      }
+    },
+    "HttpApi": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Name": "dev-poki-backend",
+        "ProtocolType": "HTTP"
+      }
+    },
+    "HttpApiStage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "StageName": "$default",
+        "AutoDeploy": true,
+        "DefaultRouteSettings": {
+          "DetailedMetricsEnabled": false
+        }
+      }
+    },
+    "AppLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AppLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationApp": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "AppLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRouteAny": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "ANY /",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationApp"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationApp"
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": "serverless-framework-deployments-eu-central-1-3866268a-3d80",
+      "Export": {
+        "Name": "sls-poki-backend-dev-ServerlessDeploymentBucketName"
+      }
+    },
+    "AppLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "AppLambdaVersionshyvndSkq3pDciNfW18EOSqZO5pLpiipuK2uGr6PE"
+      },
+      "Export": {
+        "Name": "sls-poki-backend-dev-AppLambdaFunctionQualifiedArn"
+      }
+    },
+    "HttpApiId": {
+      "Description": "Id of the HTTP API",
+      "Value": {
+        "Ref": "HttpApi"
+      },
+      "Export": {
+        "Name": "sls-poki-backend-dev-HttpApiId"
+      }
+    },
+    "HttpApiUrl": {
+      "Description": "URL of the HTTP API",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "HttpApi"
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix"
+            }
+          ]
+        ]
+      },
+      "Export": {
+        "Name": "sls-poki-backend-dev-HttpApiUrl"
+      }
+    }
+  }
+}

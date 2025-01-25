@@ -9,9 +9,8 @@ mongoose.set('debug', true);
 
 // User Registration
 exports.signup = async (req, res) => {
-  // Validate input fields
-  console.log(req.body)
  
+  //console.log(req.body)
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -63,7 +62,6 @@ exports.signup = async (req, res) => {
 };
 
 
-
 //Login Controller
 exports.login = async (req, res) => {
   try {
@@ -82,12 +80,12 @@ exports.login = async (req, res) => {
      }
 
      // Verify the password
-    /*  const isMatch = await bcrypt.compare(password, user.password);
+     const isMatch = await bcrypt.compare(password, user.password);
     console.log('Password match:', isMatch);
 
     if (!isMatch) {
       return res.status(400).json({ error: 'Invalid credentials' });
-    } */
+    } 
 
     /* // Generate JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' }); */

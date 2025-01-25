@@ -1,7 +1,7 @@
 const express = require('express');
 const { verifyToken } = require('../utils/jwtUtilities');
 const locationController = require('../controllers/locationController');
-const { extendRefreshToken }  = require('../middleware/extendRefreshToken')
+//const { extendRefreshToken }  = require('../middleware/extendRefreshToken')
 
 const router = express.Router();
 

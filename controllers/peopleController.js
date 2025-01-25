@@ -1,6 +1,6 @@
 const Photo = require('../models/Photo');
 const User = require('../models/user');
-const { calculateDistance } = require('../utils/proximity');
+//const { calculateDistance } = require('../utils/proximity');
 const getSignedUrls = require('../services/getSignedUrls');
 const { matchUsers } = require('../services/matchService');
 

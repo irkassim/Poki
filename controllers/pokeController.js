@@ -2,7 +2,7 @@ const Poke = require('../models/pokeModel');
 const User = require('../models/user');
 
 
-
+//Create  a Poke
 exports.createPoke = async (req, res) => {
   try {
     const { pokee } = req.body;
@@ -39,9 +39,7 @@ exports.createPoke = async (req, res) => {
     // Check daily poke limit (e.g., 10 pokes per day)
     const startOfDay = new Date(now.setHours(0, 0, 0, 0));
     const dailyPokes = await Poke.find({
-      poker,
-      createdAt: { $gte: startOfDay },
-    });
+      poker, createdAt: { $gte: startOfDay }, });
 
     if (dailyPokes.length >= 10) {
       return res.status(429).json({
@@ -60,7 +58,7 @@ exports.createPoke = async (req, res) => {
   }
 };
 
-
+////Accept a Poke
 exports.acceptPoke = async (req, res) => {
 
   //console.log("AcceptPoke Route", req.params.pokeId)
@@ -88,6 +86,8 @@ exports.acceptPoke = async (req, res) => {
   }
 };
 
+
+//Remove Poke
 exports.removePoke = async (req, res) => {
   
   //console.log("RejectPoke Route", req.params.pokeId)
